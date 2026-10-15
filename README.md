@@ -1,7 +1,13 @@
-# Markdown Notes —— Tauri v2 桌面应用学习项目
+# Quire · 书帖
 
-一个完整可运行的本地 Markdown 笔记应用。**侧边栏列表、搜索、自动保存、
-实时预览、快捷键、本地 SQLite 存储**，无网络依赖，数据全部留在本机。
+> 本地优先的 Markdown 笔记应用。数据只留在你自己的电脑里（一个 SQLite 文件），
+> 不联网、不注册、不追云。用 Tauri v2 + React + Rust 写成，安装包只有几 MB。
+
+**已经能用**：笔记增删改查 · 标题搜索 · 编辑 / 分屏 / 预览三视图 · 600ms 自动保存 ·
+`Ctrl+S` / `Ctrl+N` · 9 个 Markdown 工具栏按钮 · 自绘无边框顶栏 · 跟随系统的亮暗主题
+
+> 名字取自「书帖」（quire）——一叠对折的纸，叠起来就是一册笔记本。
+> 这个项目同时是一份 **Tauri v2 入门学习笔记**：架构、数据流、每一步为什么这么做，都写在下面。
 
 ---
 
@@ -14,12 +20,15 @@
 #   3. VS C++ 生成工具      winget install Microsoft.VisualStudio.2022.BuildTools --override "--quiet --add Microsoft.Visual
 Studio.Workload.VCTools --includeRecommended"
 
-cd markdown-notes
+cd quire
 npm install               # 安装前端依赖
 node scripts/make-icon.mjs && npx tauri icon src-tauri/icons/app-icon.png   # 生成应用图标
 npm run tauri dev         # 开发模式（第一次要编译 Rust，约 2-5 分钟）
 npm run tauri build       # 打出 Windows 安装包 → src-tauri/target/release/bundle/
 ```
+
+> 国内网络下官方 crates.io 索引可能慢到不可用（实测 ~5KB/s）。项目里已经带了
+> `src-tauri/.cargo/config.toml` 指向 rsproxy 镜像，克隆后无需额外配置。
 
 ---
 
@@ -60,17 +69,19 @@ npm run tauri build       # 打出 Windows 安装包 → src-tauri/target/releas
 ## 三、目录结构（每个文件是干嘛的）
 
 ```
-markdown-notes/
+quire/
 ├── package.json              # 前端依赖 + 脚本（npm run tauri 走这里）
 ├── index.html                # 网页入口，WebView 加载的第一个页面
 ├── vite.config.ts            # Vite 配置（固定 1420 端口给 Tauri 连）
 ├── src/                      # ↓ 前端（TypeScript / React）
 │   ├── main.tsx              # React 挂载入口
-│   ├── App.tsx               # 核心：状态管理、自动保存、快捷键
+│   ├── App.tsx               # 核心：状态管理、自动保存、快捷键、主题
 │   ├── api.ts                # invoke 封装层——前端调用 Rust 的唯一通道
 │   ├── types.ts              # 前后端共享的数据形状（对应 Rust 的 struct）
-│   ├── styles.css            # 深色主题样式
+│   ├── theme.ts              # 主题模式（跟随系统/浅色/深色）读写
+│   ├── styles.css            # 浅色、深色两套 CSS 变量 + 全部样式
 │   └── components/
+│       ├── TitleBar.tsx      # 自绘无边框顶栏：拖拽区、窗口按钮、主题按钮
 │       ├── Sidebar.tsx       # 笔记列表、搜索、删除确认
 │       ├── Editor.tsx        # 标题、Markdown 工具栏、textarea
 │       └── Preview.tsx       # react-markdown 实时渲染
@@ -106,14 +117,16 @@ markdown-notes/
 直接用任意 SQLite 工具（如 DB Browser for SQLite）打开就能看到 `notes` 表。
 删掉这个文件 = 清空所有笔记（可以拿来做恢复实验）。
 
+> 目录名来自 `tauri.conf.json` 的 `identifier`。为了不搬动已有数据，改项目名时刻意没有动它。
+
 ## 六、学习路线（建议按顺序改）
 
 1. **改窗口**：`src-tauri/tauri.conf.json` 里的 width/height/title，改完 dev 模式看效果
 2. **改状态**：在 `App.tsx` 把防抖 600ms 调成 2000，观察“未保存…”的变化
 3. **加字段**：给笔记加“收藏”布尔列 —— 走一遍完整的三端修改：
-   SQL 建表（db.rs）→ struct 和命令（commands.ts）→ 类型（types.ts）→ UI
+   SQL 建表（db.rs）→ struct 和命令（commands.rs）→ 类型（types.ts）→ UI
 4. **加功能**：
-   - 深浅色主题切换（改 CSS 变量）
+   - 删除改成回收站：删除时只标记 `deleted_at`，列表里过滤掉
    - Markdown 导出为 `.md` 文件（用 `@tauri-apps/plugin-fs`）
    - 标签 / 文件夹分类
    - 全局全文搜索（SQLite FTS5 扩展）
@@ -127,3 +140,4 @@ markdown-notes/
 - **白屏**：看 `npm run tauri dev` 的控制台报错，一般是 IPC 命令名对不上
 - **端口 1420 被占用**：改 `vite.config.ts` 和 `tauri.conf.json` 的 devUrl（两处要一致）
 - **首次编译很慢**：Rust 第一次要编译几百个依赖，之后增量编译只要几秒
+- **自绘顶栏拖不动窗口**：检查 `capabilities/default.json` 里有没有 `core:window:allow-start-dragging`

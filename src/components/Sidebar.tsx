@@ -35,7 +35,7 @@ export default function Sidebar({
   return (
     <aside className="sidebar">
       <div className="sidebar-head">
-        <span className="brand">📝 Markdown Notes</span>
+        <span className="brand">📝 Quire</span>
         <button className="btn-primary" onClick={onCreate}>
           ＋ 新建
         </button>

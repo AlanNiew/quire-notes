@@ -115,8 +115,8 @@ export default function TitleBar({ themeMode, onThemeMode }: Props) {
   return (
     <header className="titlebar" data-tauri-drag-region>
       <div className="titlebar-left" data-tauri-drag-region>
-        <span className="app-mark">M</span>
-        <span className="app-name">Markdown Notes</span>
+        <span className="app-mark">Q</span>
+        <span className="app-name">Quire · 书帖</span>
       </div>
 
       <div className="titlebar-right">

@@ -1,7 +1,8 @@
 {
-  "name": "markdown-notes",
+  "name": "quire",
   "private": true,
   "version": "0.1.0",
+  "description": "Quire · 本地优先的 Markdown 笔记应用（Tauri v2 + React + SQLite）",
   "type": "module",
   "scripts": {
     "dev": "vite",

@@ -1,5 +1,31 @@
-/* ========== 全局变量与基础 ========== */
+/* ========== 主题变量 ==========
+   浅色是默认值；<html data-theme="dark"> 时整套变量换成深色。
+   顶栏 .titlebar 也用这些变量，所以系统切换主题时顶部会一起变。 */
 :root {
+  color-scheme: light;
+  --bg: #ffffff;
+  --bg-panel: #f7f8fa;
+  --bg-elevated: #f1f3f5;
+  --bg-hover: #edeff3;
+  --border: #e4e7ec;
+  --text: #1f2328;
+  --text-dim: #6b7280;
+  --accent: #3b82f6;
+  --accent-soft: rgba(59, 130, 246, 0.12);
+  --accent-border: rgba(59, 130, 246, 0.35);
+  --on-accent: #ffffff;
+  --danger: #e5484d;
+  --win-hover: rgba(0, 0, 0, 0.055);
+  --win-active: rgba(0, 0, 0, 0.1);
+  --win-close-hover: #e81123;
+  --scroll-thumb: #d3d7de;
+  --scroll-thumb-hover: #bcc2cc;
+  --font-ui: 'Segoe UI', 'Microsoft YaHei', system-ui, sans-serif;
+  --font-mono: 'Cascadia Code', 'JetBrains Mono', Consolas, 'Courier New', monospace;
+}
+
+html[data-theme='dark'] {
+  color-scheme: dark;
   --bg: #0f1115;
   --bg-panel: #161a21;
   --bg-elevated: #1c212b;
@@ -9,9 +35,14 @@
   --text-dim: #8b93a3;
   --accent: #4f8cff;
   --accent-soft: rgba(79, 140, 255, 0.16);
+  --accent-border: rgba(79, 140, 255, 0.35);
+  --on-accent: #ffffff;
   --danger: #ff6b6b;
-  --font-ui: 'Segoe UI', 'Microsoft YaHei', system-ui, sans-serif;
-  --font-mono: 'Cascadia Code', 'JetBrains Mono', Consolas, 'Courier New', monospace;
+  --win-hover: rgba(255, 255, 255, 0.08);
+  --win-active: rgba(255, 255, 255, 0.14);
+  --win-close-hover: #e81123;
+  --scroll-thumb: #303848;
+  --scroll-thumb-hover: #3d475a;
 }
 
 * {
@@ -23,6 +54,10 @@ body,
 #root {
   height: 100%;
   margin: 0;
+}
+
+html {
+  background: var(--bg);
 }
 
 body {
@@ -39,24 +74,32 @@ button {
   cursor: pointer;
 }
 
-/* 滚动条（深色主题下更精致） */
+/* 滚动条（跟随主题） */
 ::-webkit-scrollbar {
   width: 10px;
   height: 10px;
 }
 ::-webkit-scrollbar-thumb {
-  background: #303848;
+  background: var(--scroll-thumb);
   border-radius: 5px;
   border: 2px solid var(--bg);
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #3d475a;
+  background: var(--scroll-thumb-hover);
 }
 
-/* ========== 整体布局 ========== */
+/* ========== 整体布局 ==========
+   .app = 顶栏 + 主体；.app-body = 侧边栏 + 编辑区 */
 .app {
   display: flex;
+  flex-direction: column;
   height: 100vh;
+}
+
+.app-body {
+  flex: 1;
+  display: flex;
+  min-height: 0;
 }
 
 .main {
@@ -65,6 +108,96 @@ button {
   flex-direction: column;
   min-width: 0;
   background: var(--bg);
+}
+
+/* ========== 自绘顶栏（替代系统标题栏） ========== */
+.titlebar {
+  height: 40px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--bg-panel);
+  border-bottom: 1px solid var(--border);
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.titlebar-left {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  height: 100%;
+  flex: 1;
+  min-width: 0;
+  padding-left: 14px;
+}
+
+.app-mark {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  border-radius: 5px;
+  background: linear-gradient(135deg, #5b8cff, #3b5bdb);
+  color: #fff;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.app-name {
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.titlebar-right {
+  display: flex;
+  align-items: stretch;
+  height: 100%;
+}
+
+.theme-btn,
+.win-btn {
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.12s, color 0.12s;
+}
+
+.theme-btn {
+  width: 40px;
+  height: 100%;
+}
+.theme-btn:hover {
+  background: var(--win-hover);
+  color: var(--text);
+}
+
+.win-btn {
+  width: 46px;
+  height: 100%;
+}
+.win-btn:hover {
+  background: var(--win-hover);
+  color: var(--text);
+}
+.win-btn:active {
+  background: var(--win-active);
+}
+.win-btn.close:hover,
+.win-btn.close:active {
+  background: var(--win-close-hover);
+  color: #fff;
 }
 
 /* ========== 侧边栏 ========== */
@@ -91,7 +224,7 @@ button {
 
 .btn-primary {
   background: var(--accent);
-  color: #fff;
+  color: var(--on-accent);
   border: none;
   border-radius: 6px;
   padding: 6px 12px;
@@ -99,7 +232,7 @@ button {
   transition: filter 0.15s;
 }
 .btn-primary:hover {
-  filter: brightness(1.15);
+  filter: brightness(1.1);
 }
 
 .search {
@@ -139,7 +272,7 @@ button {
 }
 .note-item.active {
   background: var(--accent-soft);
-  border-color: rgba(79, 140, 255, 0.35);
+  border-color: var(--accent-border);
 }
 
 .note-title {
@@ -282,7 +415,7 @@ button {
 }
 .segmented button.active {
   background: var(--accent);
-  color: #fff;
+  color: var(--on-accent);
 }
 
 /* 分屏区域 */

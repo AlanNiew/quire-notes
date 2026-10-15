@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import TitleBar from './components/TitleBar';
 import Sidebar from './components/Sidebar';
 import Editor, { type ViewMode } from './components/Editor';
 import Preview from './components/Preview';
 import { api } from './api';
 import type { Note, NoteMeta } from './types';
+import { applyThemeMode, readThemeMode, storeThemeMode, type ThemeMode } from './theme';
 
 type SaveState = 'idle' | 'dirty' | 'saving' | 'saved';
 
@@ -18,6 +20,7 @@ export default function App() {
   const [viewMode, setViewMode] = useState<ViewMode>('split');
   const [saveState, setSaveState] = useState<SaveState>('idle');
   const [savedAt, setSavedAt] = useState<number | null>(null);
+  const [themeMode, setThemeMode] = useState<ThemeMode>(() => readThemeMode());
 
   const fingerprintRef = useRef('');
   const timerRef = useRef<number | null>(null);
@@ -109,6 +112,17 @@ export default function App() {
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [active, saveNote, createNote]);
 
+  // 主题：写进 <html data-theme>；选“跟随系统”时监听系统主题变化
+  useEffect(() => {
+    applyThemeMode(themeMode);
+    storeThemeMode(themeMode);
+    if (themeMode !== 'system') return;
+    const mq = window.matchMedia('(prefers-color-scheme: dark)');
+    const onChange = () => applyThemeMode('system');
+    mq.addEventListener('change', onChange);
+    return () => mq.removeEventListener('change', onChange);
+  }, [themeMode]);
+
   const deleteNote = async (id: number) => {
     await api.deleteNote(id);
     setNotes((prev) => prev.filter((n) => n.id !== id));
@@ -145,35 +159,38 @@ export default function App() {
 
   return (
     <div className="app">
-      <Sidebar
-        notes={visibleNotes}
-        activeId={active?.id ?? null}
-        query={query}
-        onQuery={setQuery}
-        onSelect={(id) => void selectNote(id)}
-        onCreate={() => void createNote()}
-        onDelete={(id) => void deleteNote(id)}
-      />
-      <main className="main">
-        {active ? (
-          <Editor
-            note={active}
-            viewMode={viewMode}
-            onViewMode={setViewMode}
-            onChange={patchActive}
-            status={statusText}
-            preview={<Preview content={active.content} />}
-          />
-        ) : (
-          <div className="empty-state">
-            <div className="big">📝</div>
-            <div>{notes.length === 0 ? '还没有笔记' : '从左侧选择一篇笔记'}</div>
-            <button className="btn-primary" onClick={() => void createNote()}>
-              ＋ 新建第一篇
-            </button>
-          </div>
-        )}
-      </main>
+      <TitleBar themeMode={themeMode} onThemeMode={setThemeMode} />
+      <div className="app-body">
+        <Sidebar
+          notes={visibleNotes}
+          activeId={active?.id ?? null}
+          query={query}
+          onQuery={setQuery}
+          onSelect={(id) => void selectNote(id)}
+          onCreate={() => void createNote()}
+          onDelete={(id) => void deleteNote(id)}
+        />
+        <main className="main">
+          {active ? (
+            <Editor
+              note={active}
+              viewMode={viewMode}
+              onViewMode={setViewMode}
+              onChange={patchActive}
+              status={statusText}
+              preview={<Preview content={active.content} />}
+            />
+          ) : (
+            <div className="empty-state">
+              <div className="big">📝</div>
+              <div>{notes.length === 0 ? '还没有笔记' : '从左侧选择一篇笔记'}</div>
+              <button className="btn-primary" onClick={() => void createNote()}>
+                ＋ 新建第一篇
+              </button>
+            </div>
+          )}
+        </main>
+      </div>
     </div>
   );
 }

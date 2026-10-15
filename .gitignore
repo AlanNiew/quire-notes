@@ -1,0 +1,7 @@
+node_modules/
+dist/
+src-tauri/target/
+src-tauri/gen/
+*.log
+# 本机 cargo 镜像配置，不进仓库
+src-tauri/.cargo/
